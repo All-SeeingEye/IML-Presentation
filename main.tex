@@ -110,7 +110,10 @@
         \includegraphics[width=1\linewidth]{f4.png}
         \label{fig:enter-label}
     \end{figure}
-    \footnote{image credits: Lena Voita}
+    \renewcommand{\thefootnote}{}
+\footnotetext{image credits: Lena Voita}
+\renewcommand{\thefootnote}{\arabic{footnote}}
+
 \end{frame}
 
 \begin{frame}{Encoder Architecture}
@@ -189,7 +192,25 @@
     \end{columns}
 \end{frame}
 
-\begin{frame}{Idea behind Attention}
+\begin{frame}{Idea behind the Attention}
+\begin{columns}
+  \column{0.4\textwidth}
+  \includegraphics[width=1\linewidth]{f12.png}
+  \column{0.6\textwidth}
+  \begin{itemize}
+      \item Each element attends to every other element
+      \item It is an attention mechanism relating different positions of a single sequence in order to compute a representation of the same sequence
+      \item Each element becomes query, key, and value from the input embeddings by multiplying by a weight matrix
+  \end{itemize}
+    
+\end{columns}
+\renewcommand{\thefootnote}{}
+\footnotetext{https://github.com/tensorflow/tensor2tensor}
+\renewcommand{\thefootnote}{\arabic{footnote}}
+
+\end{frame}
+
+\begin{frame}{Maths behind Attention}
 
 \begin{itemize}
     \item Learn (differentiable) how to pick relevant information from input data.
@@ -213,9 +234,101 @@
 
 \end{frame}
 
-\begin{frame}{Idea behind Attention continue...}
+
+\begin{frame}{Scaled-Dot Product Attention}
+
+$d_{model}$ : embedding or attention dimentions(=512)
+
+$T$: Input sequence length
+
+$Q,K,V \in \Re^{T \texttt{x} d_{model}}$
+
+\begin{columns}
+  \column{0.2\textwidth}
+  \includegraphics[width=1.25\linewidth]{f11.png} % Replace with your image filename
+
+\column{0.8\textwidth}
+
+
+        $
+        \text{Attention}(Q, K, V) = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V
+        $
+
+
+
+
+\begin{columns}
+
+\column{0.4\textwidth}
+$
+V = \Bigg[
+\begin{array}{ccc}
+- & v_{1}^T & - \\
+- & v_{2}^T & -  \\
+\vdots & \vdots & \vdots \\
+- & v_{T}^T & -
+\end{array}
+\Bigg]_{T \texttt{x} d_{model}}
+$
+\column{0.6\textwidth} 
+$
+QK^T = \Bigg[
+\begin{array}{cccc}
+a_{11} & a_{12} & \cdots & a_{1T} \\
+a_{21} & a_{22} & \cdots & a_{2T} \\
+\vdots & \vdots & \ddots & \vdots \\
+a_{T1} & a_{T2} & \cdots & a_{TT}
+\end{array}
+\Bigg]_{T\texttt{x}T}
+$
+
+\end{columns}
+
+
+$
+QK^TV = \Bigg[
+\begin{array}{ccc}
+- & \Sigma_{k=1}^Ta_{1k}v_{k}^T & - \\
+- & \Sigma_{k=1}^Ta_{2k}v_{k}^T & -  \\
+\vdots & \vdots & \vdots \\
+- & \Sigma_{k=1}^Ta_{Tk}v_{k}^T & -
+\end{array}
+\Bigg]_{T \texttt{x} d_{model}}
+$
+
+
+
+
+\end{columns}
+
     
 \end{frame}
+
+
+
+
+
+
+
+
+\begin{frame}{Attention continue...}
+
+% \begin{itemize}
+%     \item The main idea that a network can learn which input parts are more important at each step. Since everything here is differentiable (attention function, softmax, and all the rest), a model with attention can be trained end-to-end. We don't need to specifically teach the model to pick the words you want - the model itself will learn to pick important information.
+% \end{itemize}
+The general computation scheme is shown below.\renewcommand{\thefootnote}{}
+\footnotetext{image credit: Lena Voita}
+\renewcommand{\thefootnote}{\arabic{footnote}}
+
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\linewidth]{f10.png}
+    \label{fig:enter-label}
+\end{figure}
+    
+\end{frame}
+
 
 \end{document}
 
