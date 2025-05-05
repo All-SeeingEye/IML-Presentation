@@ -329,7 +329,284 @@ The general computation scheme is shown below.\renewcommand{\thefootnote}{}
     
 \end{frame}
 
+\begin{frame}{Multi-Head Attention}
 
+\begin{itemize}
+  \item Queries, keys, and values are \textbf{linearly projected} $h$ times using \textbf{different learned linear projections} into smaller dimensions ($d_k$, $d_v$).
+  
+  \item Attention is applied \textbf{independently} to each set of projected vectors in parallel, producing multiple $d_v$-dimensional outputs.
+  
+  \item The outputs from all heads are \textbf{concatenated} and passed through a final linear layer to produce the output.
+  
+  \item Multi-head attention allows the model to \textbf{attend to information from different subspaces and positions simultaneously}, improving representational capacity.
+  \begin{align*}
+    \text{MultiHead}(Q, K, V) &= \text{Concat}(\text{head}_1, ..., \text{head}_h)W^O \\
+    \text{where} \quad \text{head}_i &= \text{Attention}(QW^Q_i, KW^K_i, VW^V_i)
+  \end{align*}
+
+  \item Using multiple heads with reduced dimensions (e.g., $d_k = d_v = \frac{d_{\text{model}}}{h} = 64$, $h = 8$) \textbf{keeps computational cost similar} to single-head attention.
+\end{itemize}
+    
+\end{frame}
+
+\begin{frame}{Why multi-head attention...}
+
+\begin{itemize}
+    \item Allows for model to focus on different positions
+    \item Gives attention layer multiple “representation subspaces”
+    \item No longer need to oversaturate one attention mechanism
+\end{itemize}
+
+\begin{columns}
+  \column{0.3\textwidth}
+  \includegraphics[width=1\linewidth]{f14.png} % Replace with your image filename
+
+  \column{0.7\textwidth}
+  \textbf{Learned Parameters:}
+  \begin{align*}
+    W^Q_i &\in \mathbb{R}^{d_{\text{model}} \times d_k} \\
+    W^K_i &\in \mathbb{R}^{d_{\text{model}} \times d_k} \\
+    W^V_i &\in \mathbb{R}^{d_{\text{model}} \times d_v} \\
+    W^O   &\in \mathbb{R}^{h \cdot d_v \times d_{\text{model}}}
+  \end{align*}
+\end{columns}
+
+Using multiple heads with reduced dimensions (e.g., $d_k = d_v = \frac{d_{\text{model}}}{h} = 64$, $h = 8$) \textbf{keeps computational cost similar} to single-head attention.
+    
+\end{frame}
+
+\begin{frame}{Zoom into Encoder}\renewcommand{\thefootnote}{}
+\footnotetext{editing credit: Shah Jainam}
+\renewcommand{\thefootnote}{\arabic{footnote}}
+\begin{figure} 
+    \centering
+    \includegraphics[width=1\linewidth]{f15.png}
+    \label{fig:enter-label}
+\end{figure}
+\end{frame}
+
+\begin{frame}{Masked Attention}
+
+\begin{itemize}
+    \item Masking hides future tokens during each prediction.
+    \item Prevents the model from "cheating" by seeing future outputs.
+    \item It also allows the model to train in parallelization.
+\end{itemize}
+
+\begin{columns}
+
+  \column{0.5\textwidth}
+  \includegraphics[width=1\linewidth]{f16.png}\renewcommand{\thefootnote}{}
+\footnotetext{image credit: Deep Study(Youtube Channel)}
+  \column{0.5\textwidth}
+
+  \begin{itemize}
+      \item   The training algorithm knows the entire expected output. It hides (masks) a part of this known output sequence for each of the parallel operations.
+  \end{itemize}    
+\end{columns}
+
+\begin{itemize}
+    \item During inference, the decoder works sequentially, generating one token at a time since the full output is unknown.
+    \item The model learns to predict masked words using context from the visible (non-masked) words.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Cross Attention}
+
+\begin{itemize}
+    \item  Cross-attention acts as a bridge between the encoder and decoder. It allows the decoder to "ask" the encoder which parts of the input are most relevant for decoding.
+\end{itemize}
+
+
+\begin{columns}
+    \column{0.35\linewidth}
+        \vspace{2em} % Adjust this value as needed
+        \includegraphics[width=1.2\linewidth]{f17.png}
+        \renewcommand{\thefootnote}{}
+        \footnotetext{image credit: www.geeksforgeeks.org/}
+
+    \column{0.65\linewidth}
+    \vspace{-1em}
+    \begin{itemize}
+        \item Query (Question): Decoder creates a "query".
+        \item Keys and Values (Answers): Encoder provides "keys" and "values." 
+        \item Matching: Cross-attention mechanism compares the query from the decoder with the keys from the encoder. 
+    \end{itemize}
+\end{columns}
+
+\begin{itemize}
+    \item Combining Information: The cross-attention mechanism combines the relevant information from the encoder (values) to help the decoder generate the next word in the translation.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Inference Visualization}
+
+\begin{figure}\renewcommand{\thefootnote}{}
+\footnotetext{image credit: Shah Jainam}
+    \centering
+    \includegraphics[width=0.8\linewidth]{f18.png}
+    \label{fig:enter-label}
+\end{figure}
+    
+\end{frame}
+
+\begin{frame}{Why Self-Attention?}
+
+Three criteria for consideration:
+\begin{itemize}
+    \item The total computational complexity per layer. 
+    \item The amount of computation that can be parallelized, as measured by the minimum number of sequential operations required.
+    \item The path length between long-range dependencies in the network.
+    \begin{itemize}
+        \item The shorter these paths between any combination of positions in the input and output sequences, the easier it is to learn long-range dependencies \footnote{Sepp Hochreiter, Yoshua Bengio, Paolo Frasconi, and Jürgen Schmidhuber}.
+    \end{itemize}
+\end{itemize}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1\linewidth]{f19.png}
+    \label{fig:enter-label}
+\end{figure}
+\end{frame}
+
+\begin{frame}{Complexity of layer types}
+
+\begin{figure}\renewcommand{\thefootnote}{}
+\footnotetext{image credit: Jeong-Gwan Lee}
+    \centering
+    \includegraphics[width=0.7\linewidth]{f20.png}
+    \label{fig:enter-label}
+\end{figure}
+
+\vspace{-1em}
+\begin{itemize}
+    \item Self-Attention
+        \begin{itemize}
+        \item Connectivity: All positions connected in constant sequential steps
+        \item Parallelism: High; allows full parallel execution
+    \end{itemize}
+    
+    \item Recurrent Layers (RNNs)
+        \begin{itemize}
+        \item Parallelism: Low; inherently sequential
+        \item Complexity: Higher latency due to step-by-step processing
+    \end{itemize}
+
+    \item Convolutional Layers
+        \begin{itemize}
+        \item Kernel width $k<n$ $\rightarrow$ limited direct connectivity.
+        \item Longer path lengths between distant positions
+    \end{itemize}
+\end{itemize}    
+\end{frame}
+
+\begin{frame}{Training}
+
+\textbf{English-to-German: State-of-the-Art}
+\begin{itemize}
+  \item Transformer (Big) achieves \textbf{28.4 BLEU}
+  \item Outperforms all previous models and ensembles by \textbf{+2.0 BLEU}
+  \item Trained in \textbf{3.5 days on 8× P100 GPUs}
+  \item Base Transformer also surpasses prior models at a lower training cost
+\end{itemize}
+
+\textbf{English-to-French: High Performance, Low Cost}
+\begin{itemize}
+  \item Transformer (Big) achieves \textbf{41.0 BLEU}
+  \item Outperforms all previous single models
+  \item Training cost is less than \textbf{¼ of previous state-of-the-art}
+  \item Dropout used: $P_{drop} = 0.1$ (vs 0.3)
+\end{itemize}
+
+\textbf{Training \& Inference Details}
+\begin{itemize}
+  \item Checkpoint averaging:
+    \begin{itemize}
+      \item Base: last 5 checkpoints
+      \item Big: last 20 checkpoints
+    \end{itemize}
+  \item Beam search: beam size = 4, length penalty $\alpha = 0.6$
+  \item Output length: input length + 50 (early stopping enabled)
+\end{itemize}
+
+\textbf{Training Cost Estimation}
+\begin{itemize}
+  \item Estimated FLOPs = training time × \#GPUs × GPU FLOP capacity
+\end{itemize}
+    
+\end{frame}
+
+\begin{frame}{Model Comparisons}
+
+The Transformer achieves better BLEU scores than previous state-of-the-art models on the
+English-to-German and English-to-French newstest2014 tests at a fraction of the training cost. 
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1\linewidth]{f21.png}
+    \label{fig:enter-label}
+\end{figure}
+    
+\end{frame}
+
+\begin{frame}{Model Variations}
+
+Variations on the Transformer architecture. Unlisted values are identical to those of the base model. All metrics are on the English-to-German translation development set, newstest2013. Listed perplexities are per-wordpiece, according to our byte-pair encoding, and should not be compared to per-word perplexities
+\begin{figure}
+    \centering
+    \includegraphics[width=0.75\linewidth]{f22.png}
+    \label{fig:enter-label}
+\end{figure}
+\end{frame}
+
+\begin{frame}{English Constituency Parsing}
+\begin{itemize}
+    \item To evaluate if the Transformer can generalize to other tasks, experiments on English constituency parsing.
+    
+    \item This task presents specific challenges: the output is subject to strong structural constraints and is significantly longer than the input. 
+    
+    \item Furthermore, RNN sequence-to-sequence models have not been able to attain state-of-the-art results in small-data regimes.
+\end{itemize}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\linewidth]{f23.png}
+    \label{fig:enter-label}
+\end{figure}
+\end{frame}
+
+\begin{frame}{Limitations of Transformer}\renewcommand{\thefootnote}{}
+\footnotetext{Angela Fan†
+, Thibaut Lavril, Edouard Grave, Armand Joulin, Sainbayar Sukhbaatar}
+\textbf{1. Walking Down a Corridor}
+\begin{itemize}
+    \item Agent sees a colored object (blue/green), walks a long corridor, and selects the correct colored door.
+    \item \textbf{Result:} Transformer performance degrades with smaller memory.
+\end{itemize}
+
+\textbf{2. Copy and Reverse}
+\begin{itemize}
+    \item Input: Sequence of digits (0–9), length 40 (train), 400 (test).
+    \item \textbf{Result:} Feedback Transformer shows large gains in accuracy and generalization.
+\end{itemize}
+
+\textbf{3. Counting}
+\begin{itemize}
+    \item Input: A’s repeated; Output: same number of B’s.
+    \item \textbf{Result:} Feedback Transformer significantly better, especially on longer sequences.
+\end{itemize}
+    
+\end{frame}
+
+\begin{frame}{Future Works}
+
+
+
+
+    
+\end{frame}
+    
 \end{document}
 
 
